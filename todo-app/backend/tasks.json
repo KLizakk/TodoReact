@@ -1,12 +1,24 @@
 [
   {
-    "text": "xDDD",
+    "text": "Pranie",
     "date": "22.05.2024",
     "type": "regular"
   },
   {
-    "text": "xDDDDDDD",
+    "text": "Pić wodę !",
     "date": "22.05.2024",
+    "type": "daily"
+  },
+  {
+    "id": 1717617822263,
+    "text": "",
+    "date": "5.06.2024",
+    "type": "regular"
+  },
+  {
+    "id": 1717617823808,
+    "text": "asdasd",
+    "date": "5.06.2024",
     "type": "regular"
   }
 ]

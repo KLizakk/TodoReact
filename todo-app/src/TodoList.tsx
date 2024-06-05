@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 interface Task {
+  id: number;
   text: string;
   date: string;
   type: 'daily' | 'regular';
@@ -11,35 +12,55 @@ const TodoList: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [task, setTask] = useState<string>("");
   const [type, setType] = useState<'daily' | 'regular'>('regular');
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     fetch('http://localhost:5000/tasks')
-      .then(response => response.json())
-      .then(data => setTasks(data));
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch tasks');
+        }
+        return response.json();
+      })
+      .then(data => setTasks(data))
+      .catch(error => setError(error.message));
   }, []);
 
   const addTask = () => {
-    const newTask: Task = { text: task, date: new Date().toLocaleDateString(), type };
+    const newTask: Task = { id: Date.now(), text: task, date: new Date().toLocaleDateString(), type };
     fetch('http://localhost:5000/tasks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newTask)
     })
-      .then(response => response.json())
-      .then(data => setTasks([...tasks, data]));
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to add task');
+        }
+        return response.json();
+      })
+      .then(data => setTasks(prevTasks => [...prevTasks, data]))
+      .catch(error => setError(error.message));
     setTask("");
   };
 
-  const deleteTask = (index: number) => {
-    fetch(`http://localhost:5000/tasks/${index}`, {
+  const deleteTask = (id: number) => {
+    fetch(`http://localhost:5000/tasks/${id}`, {
       method: 'DELETE',
     })
       .then(response => {
         if (response.status === 204) {
-          setTasks(tasks.filter((_, i) => i !== index));
+          setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+        } else {
+          throw new Error('Failed to delete task');
         }
-      });
+      })
+      .catch(error => setError(error.message));
   };
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className="max-w-md mx-auto mt-10">
@@ -67,12 +88,12 @@ const TodoList: React.FC = () => {
         </button>
       </div>
       <ul className="list-disc list-inside">
-        {tasks.map((task, index) => (
-          <li key={index} className="mb-2 flex justify-between items-center">
-            <Link to={`/task/${index}`} className="font-semibold">{task.text}</Link> - {task.date} ({task.type})
+        {tasks.map(task => (
+          <li key={task.id} className="mb-2 flex justify-between items-center">
+            <Link to={`/task/${task.id}`} className="font-semibold">{task.text}</Link> - {task.date} ({task.type})
             <button
               className="bg-red-500 text-white p-1 ml-2"
-              onClick={() => deleteTask(index)}
+              onClick={() => deleteTask(task.id)}
             >
               Delete
             </button>
